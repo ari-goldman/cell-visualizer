@@ -34,7 +34,7 @@ void main() {
 
     float rimDot = 1 - dot(V,N);
     float rimIntensity = rimDot * pow(NdotL, rimThreshold);
-    vec4 rim = max(0,rimIntensity) * rimColor;
+    vec4 rim = max(0, rimIntensity) * rimColor;
     // rim = vec4(0);
 
     // set final color, factoring in all ambient, diffuse, rim, 
@@ -42,11 +42,5 @@ void main() {
     vec4 fragColor = baseColor * (ambientColor + (diffuse + specular) /*/ distance(P,L)*/) + rim;
     fragColor *= texture2D(tex,gl_TexCoord[0].xy);
     gl_FragColor = mix(fragColor, gl_Fog.color, fogFactor);
-    // gl_FragColor = vec4(vec3(fogFactor),1);;
-    
-    
 
-    // gl_FragColor = vec4(specularIntensity);
-
-    // gl_FragColor = vec4(viewDir,1);
 }

@@ -10,7 +10,7 @@ void main(){
     gl_Position = gl_Vertex;
 
     // set the uv coords at the corners
-    // and make the smallest dimension from -1 to 1, and the larges can go beyond to keep aspect ratio
+    // and make the smallest dimension from -1 to 1, and the largest can go beyond to keep aspect ratio
     uv = gl_Vertex.xy;
     uv = uv * screenSize.yx / min(screenSize.x, screenSize.y);
 
@@ -18,6 +18,8 @@ void main(){
     float ph = th_ph.y;
     float cameraDist = 3;
 
+    // can just interpolate this from the corners
     rayOrigin = vec3(-cameraDist * sin(th) * cos(ph), cameraDist * sin(ph), -cameraDist * cos(th) * cos(ph));
+
 }
 

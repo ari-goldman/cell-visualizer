@@ -1,8 +1,8 @@
 /*
- * Ari Goldman
- * Final Project
+ *
+ *  Ari Goldman
  * 
- * Colors: https://lospec.com/palette-list/mulfok32
+ *  Colors: https://lospec.com/palette-list/mulfok32
  * 
  */
 
@@ -62,11 +62,14 @@ char pause = 0;
 #define VACUOLE 6
 #define RIBOSOME 7
 
-char zoomLevel = 8; // 0 = cell, >0 = organelle   (8 = raymarch)
+char zoomLevel = 2; // 0 = cell, >0 = organelle  
 
 
 // float ModelMatrix[16];
 
+/*
+  * Map t from [x,y] to [u,v]
+  */
 double map(double t, double x, double y, double u, double v){
    return (t-x)/(y-x) * (v-u) + u;
 }
@@ -210,6 +213,7 @@ void colorBase(char base){
 
 /*
  *  Draw a DNA molecule
+ * (unused, but was foundation for RNA)
  */
 char bases[] = {3, 2, 0, 2, 1, 3, 2, 0, 0, 0, 3, 3, 0, 1, 2, 1, 2, 3, 3, 3, 2, 3, 2, 0, 1, 1, 0, 0, 2, 0, 1, 3, 0, 1, 1, 3, 2, 0, 2, 2, 3, 3, 0, 3, 0, 2, 1, 2, 2, 2, 0, 2, 1, 2, 1, 2, 3, 1, 2, 1, 2, 2, 1, 0, 0, 2, 1, 1, 2, 2, 1, 2, 1, 2, 1, 1, 3, 3, 3, 3, 1, 3, 3, 2, 2, 0, 3, 1, 1, 0, 2, 1, 1, 3, 2, 1, 3, 3, 3, 0}; // len = 100
 void DNA(int pairs){
@@ -245,30 +249,36 @@ void RibosomeRNA(int pairs){
    glRotated(90,0,0,1);
 
    double length = pairs * 0.2;
-   int partitions = 10;
+   int partitions = 10; 
+
+   // calculate starting base from time
    int base = (t + 1) / 2;
    base *= 3;
    base = 100 - (base % 100);
 
+   // translate to center at 0 and move by animation
    glTranslated(0,length / -2 + 0.1, 0);
    double dy = fmod(t, 2) < 1 ? (1.5 - 1.5 * cos(M_PI * t)) * 0.2 : 0;
    glTranslated(0, dy, 0);
 
+   // draw the strand with "pairs" number of bases
    for(int i = 0; i < pairs; i++){
+      // calculate the signed distance from the center
       float distFromCenter = (length / -2 + 0.1) + (0.2 * i) + dy;
       distFromCenter = distFromCenter * distFromCenter * 10 * (distFromCenter < 0 ? -1 : 1);
+
       base %= 100;
 
       glPushMatrix(); // 2+
-      glRotatef(distFromCenter,0,1,0);
+      glRotatef(distFromCenter,0,1,0); // get the twisting effect - bases near origin should be flat
       glColor3d(0.6823529411764706, 0.8862745098039215, 1); // outside color
-      sphere(partitions, -0.375, 0, 0, 0.25);
-      colorBase(bases[base]); // base color
+      sphere(partitions, -0.375, 0, 0, 0.25); 
+      colorBase(bases[base]); // set appropriate base color
       cylinder(partitions, -0.15, 0, 0, 0, 0, 90, 0.1, 0.25, 0.1);
       glPopMatrix(); // 2-
 
-      glTranslated(0,0.2,0);
-      base++;
+      glTranslated(0,0.2,0); // move to next base in strand
+      base++; // move to next base color
    }
 
    glPopMatrix(); // 1-
@@ -300,7 +310,9 @@ void RibosomeProtein(){
    glUseProgram(0);
 }
 
-
+/*
+  * Draw a simple ribosome scene
+  */
 void Ribosome(){
    glUseProgram(shaders[0]);
 
@@ -347,6 +359,9 @@ void lightning(int length){
    glPopMatrix();
 }
 
+/*
+  * Create a lightning bolt at a "random" spot on the mitochondrion
+  */
 void instantiateLightning(){
    if(fmod(t * (sin(t * 1.830181) + 1),1) >= 0.9){
       float lightPos[] = {0,0,0,1};
@@ -354,6 +369,7 @@ void instantiateLightning(){
       lightPos[0] = Cos(rando * 180);
       lightPos[1] = Sin(rando * 180);
       lightPos[2] = rando - 0.5;
+
       glPushMatrix();
       glTranslated(-0.5 * lightPos[0], -0.5 * lightPos[1], lightPos[2]);
       glRotated(rando * 180 + 90,0,0,1);
@@ -365,23 +381,23 @@ void instantiateLightning(){
       lightPos[1] *= -4;
       lightPos[2] = rando - 0.5;
       glLightfv(GL_LIGHT0,GL_POSITION, lightPos);
-
-      // sphere(10,lightPos[0],lightPos[1],lightPos[2],0.1);
    }
 }
 
+/*
+  * Draw the mitochondrion scene
+  */
 void Mitochondrion(){
    int partitions = 36;
    double dth = 360 / partitions;
-   dth = 10; // just hard-set it to avoid problems
+   dth = 10; // just hard-set it to avoid problems 
    double x, y, z;
 
    glEnable(GL_FOG);
    glFogi(GL_FOG_MODE, GL_LINEAR);
-   float fogColor[] = {0.682, 0.886, 1, 1};
-   glClearColor(fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
-   glFogfv(GL_FOG_COLOR, fogColor);
-   glFogf(GL_FOG_DENSITY, 0.1);
+   // float fogColor[] = {0.682, 0.886, 1, 1};
+   // glClearColor(fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
+   // glFogfv(GL_FOG_COLOR, fogColor);
    glFogf(GL_FOG_START,6);
    glFogf(GL_FOG_END,10);
 
@@ -395,25 +411,6 @@ void Mitochondrion(){
    glUseProgram(shaders[0]);
    glPushMatrix(); // 1+
    glColor3d(0.988, 0.937, 0.553);
-
-   // glUseProgram(shaders[0]);
-   // glRotated(270,1,0,0);
-   
-   // if(closed){
-   //    glBegin(GL_QUAD_STRIP);
-   //    double x, z;
-   //    for(int th = 0; th <= 360; th += dth){
-   //       x = Cos(th) / 2;
-   //       z = Sin(th) / 2;
-   //       glNormal3d(x, z, 0);
-   //       glVertex3d(x, z, -0.5);
-   //       glNormal3d(x, z, 0);
-   //       glVertex3d(x, z, +0.5);
-   //    }
-   //    glEnd();
-   //    // glUseProgram(0);
-   //    return;
-   // }
 
    double insideScale = 0.75; // scale of the inside of the organelle "shell"
 
@@ -463,11 +460,9 @@ void Mitochondrion(){
       glNormal3d(0,1,0);
       for(int th = 90; th <= 270; th += dth){
          x = Sin(th);
-         // y = Sin(ph);
          z = Cos(th);
          glVertex3d(x, 0, z);
          x *= insideScale;
-         // y *= scale;
          z *= insideScale;
          glVertex3d(x, 0, z);
       }
@@ -540,32 +535,15 @@ void Mitochondrion(){
       glPopMatrix(); // 2-
 
       glUseProgram(shaders[1]);
-      // create the lightning such that it only affects the bottom of the mitochondrion
+      // create the lightning such that it only effects the bottom of the mitochondrion
       instantiateLightning();
       glUseProgram(shaders[0]);
 
    }
 
-   
-
    glUseProgram(0);
    glDisable(GL_FOG);
    glEnable(GL_LIGHT0);
-
-
-
-   // double inside = 0.75;
-   // // inside
-   // glBegin(GL_QUAD_STRIP);
-   // for(int th = 180; th <= 360; th += dth){
-   //    x = Cos(th) / 2 * inside;
-   //    z = Sin(th) / 2 * inside;
-   //    glNormal3d(-x, -z, 0);
-   //    glVertex3d(x, z, -0.5);
-   //    glNormal3d(-x, -z, 0);
-   //    glVertex3d(x, z, +0.5);
-   // }
-   // glEnd();
 
    glPopMatrix(); // 1-
 }
@@ -573,21 +551,27 @@ void Mitochondrion(){
 void Nucleus(){}
 
 void Golgi(){
-   int partitions = 36;
-   double dth = 360.0 / partitions;
-   glColor3d(0.933, 0.561, 0.796);
+
+   // enable raymarching and draw the quad
+   glUseProgram(shaders[2]);
+   glUniform2f(glGetUniformLocation(shaders[2],"screenSize"), screenSize[0], screenSize[1]);
+   glUniform1f(glGetUniformLocation(shaders[2],"t"), t);
+   glUniform3f(glGetUniformLocation(shaders[2],"cameraPos"), Ex, Ey, Ez);
+   glUniform2f(glGetUniformLocation(shaders[2],"th_ph"), th * M_PI / 180, ph * M_PI / 180);
+   glPushAttrib(GL_FOG_BIT);
+   glFogf(GL_FOG_START,5);
+   glFogf(GL_FOG_END,6);
    glPushMatrix();
-   for(int i = 0; i < 2; i++){
-      for(int j = i; j < 8; j++){
-         glPushMatrix();
-         double scale = log(8-j) / log(2);
-         glScaled(scale, scale, 0.1);
-         sphere(partitions,0,0,j * 1.1,1);
-         glPopMatrix();
-      }
-      glRotatef(180,0,1,0);
-   }
+   glLoadIdentity();
+   glBegin(GL_QUADS);
+   glVertex3d(-1,-1,0);
+   glVertex3d(1,-1,0);
+   glVertex3d(1,1,0);
+   glVertex3d(-1,1,0);
+   glEnd();
    glPopMatrix();
+   glPopAttrib();
+   glUseProgram(0);
 }
 
 void Endoplasmic(){}
@@ -598,23 +582,6 @@ void Vacuole(){}
 
 void Membrane(){}
 
-void RayMarch(){
-   glUseProgram(shaders[2]);
-   glUniform2f(glGetUniformLocation(shaders[2],"screenSize"), screenSize[0], screenSize[1]);
-   glUniform1f(glGetUniformLocation(shaders[2],"t"), t);
-   glUniform3f(glGetUniformLocation(shaders[2],"cameraPos"), Ex, Ey, Ez);
-   glUniform2f(glGetUniformLocation(shaders[2],"th_ph"), th * M_PI / 180, ph * M_PI / 180);
-   glPushMatrix();
-   glLoadIdentity();
-   glBegin(GL_QUADS);
-   glVertex3d(-1,-1,0);
-   glVertex3d(1,-1,0);
-   glVertex3d(1,1,0);
-   glVertex3d(-1,1,0);
-   glEnd();
-   glPopMatrix();
-   glUseProgram(0);
-}
 
 
 
@@ -677,9 +644,6 @@ void display()
    // glScalef(0.5,0.5,0.5);
    // Mitochondria();
    switch(zoomLevel){
-      case 8:
-         RayMarch();
-         break;
       case NUCLEUS:
          Nucleus();
          break;
@@ -709,7 +673,7 @@ void display()
 
    glDisable(GL_LIGHTING);
 
-   glWindowPos2i(10,10);
+   // glWindowPos2i(10,10);
 
    ErrCheck("display");
    glFlush();
@@ -728,9 +692,10 @@ void special(int key,int x,int y)
 void Projection(){
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   if(zoomLevel >= 0){
+   if(zoomLevel != GOLGI){
       gluPerspective(fov, asp, dim / 16, dim*8);
    }else{
+      // for raymarching, don't want perspective on the quad
       glOrtho(-1,1,-1,1,-1,1);
    }
    
@@ -745,19 +710,33 @@ void key(unsigned char ch,int x,int y)
 {
    //  Exit on ESC
    if (ch == 27)
-      if (zoomLevel == 0) exit(0);
-      else zoomLevel = 0;
+      exit(0);
    else if (ch == 'w' || ch == 'W')
-      t += (1 + (999 * (ch == 'W')))/1000.0; // time control (shift W = +1 second)
+      t += (10 + (990 * (ch == 'W'))) / 1000.0; // time control (shift W = +1 second) // overly complicated
    else if (ch == 's' || ch == 'S')
-      t -= (1 + (999 * (ch == 'S')))/1000.0; // time control (shift S = -1 second)
+      t -= (10 + (990 * (ch == 'S'))) / 1000.0; // time control (shift S = -1 second)
    else if (ch == ' ')
       pause = !pause;
    else if ('1' <= ch && ch <= '8' && zoomLevel >= 0){
-      t = ch - '0' != zoomLevel ? 0 : t; // reset time if changing scenes
-      zoomLevel = ch - '0'; // switch to specific organelle
+      switch (ch )
+      {
+      case '1':
+         t = zoomLevel != 2 ? 2 : t; // reset time if changing scenes
+         zoomLevel = 2;
+         break;
+      case '2':
+         t = zoomLevel != 3 ? 0 : t; // reset time if changing scenes
+         zoomLevel = 3;
+         break;
+      case '3':
+         t = zoomLevel != 7 ? 0 : t; // reset time if changing scenes
+         zoomLevel = 7;
+         break;
+      
+      default:
+         break;
+      }
    }
-   // printf("%d", ch);
    
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
@@ -927,7 +906,7 @@ int main(int argc,char* argv[])
    glutInitWindowSize(900,900);
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
    //  Create the window
-   glutCreateWindow("Cell");
+   glutCreateWindow("final");
 #ifdef USEGLEW
    //  Initialize GLEW
    if (glewInit()!=GLEW_OK) Fatal("Error initializing GLEW\n");
@@ -948,7 +927,7 @@ int main(int argc,char* argv[])
    shaders[2] = CreateShaderProg("raymarch.vert", "raymarch.frag" );
 
    texture[0] = LoadTexBMP("innerMitochondrion.bmp");
-   //  https://www.opengl.org/resources/libraries/glut/spec3/node51.html
+
    glutMotionFunc(mouseClickMove);
    glutPassiveMotionFunc(mouseMove);
    //  Pass control to GLUT so it can interact with the user

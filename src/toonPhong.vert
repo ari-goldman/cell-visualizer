@@ -7,6 +7,7 @@ varying vec3 L; // direction to light from vertex
 varying vec3 V; // view vector
 varying vec4 baseColor; // just the color specified for the object
 varying float fogFactor;
+varying vec4 fogColor;
 
 void main() {
     vec3 P = vec3(gl_ModelViewMatrix * gl_Vertex);
